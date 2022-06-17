@@ -1,23 +1,28 @@
 <template>
   <div class="grid">
     <div class="col-12">
-
+      {{ locForm }}
       <div class="card">
         <Toast/>
 
         <Toolbar class="mb-4">
           <template v-slot:start>
             <div class="my-2">
-              <Button label="New" icon="pi pi-plus" class="p-button-primary mr-2" @click="openNew"/>
-              <Button label="Delete" icon="pi pi-trash" class="p-button-danger" @click="confirmDeleteSelected"
+              <Button label="Novo" icon="pi pi-plus" class="p-button-primary mr-2" @click="adicionarNovo"/>
+
+              <Button label="Excluir" icon="pi pi-trash" class="p-button-danger" @click="confirmDeleteSelected"
                       :disabled="!linhaSelecionada || !linhaSelecionada.length"/>
             </div>
           </template>
 
           <template v-slot:end>
-            <FileUpload mode="basic" accept="image/*" :maxFileSize="1000000" label="Import" chooseLabel="Import"
+            <Button label="Visualizar" icon="pi pi-search" class="p-button-secondary mr-2 inline-block" @click="show"/>
+
+            <FileUpload mode="basic" accept="image/*" :maxFileSize="1000000" label="Importar" chooseLabel="Importar"
                         class="mr-2 inline-block"/>
-            <Button label="Export" icon="pi pi-upload" class="p-button-help" @click="exportCSV($event)"/>
+
+            <Button label="Exportar" icon="pi pi-upload" class="p-button-help inline-block" @click="exportCSV($event)"/>
+
           </template>
 
         </Toolbar>
@@ -26,7 +31,7 @@
                    :rows="10" :filters="filtros"
                    paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                    :rowsPerPageOptions="[5,10,25]"
-                   currentPageReportTemplate="Showing {first} to {last} of {totalRecords} produtos"
+                   currentPageReportTemplate="Monstrando de {first} a {last} de {totalRecords} clientes"
                    responsiveLayout="scroll">
 
           <template #header>
@@ -34,7 +39,12 @@
               <h5 class="m-0">Gerenciar Clientes</h5>
               <span class="block mt-2 md:mt-0 p-input-icon-left">
                 <i class="pi pi-search"/>
-                <InputText v-model="filtros['global'].value" placeholder="Search..."/>
+                <InputText v-model="filtros['global'].value" placeholder="Codigo..."/>
+              </span>
+
+              <span class="block mt-2 md:mt-0 p-input-icon-left">
+                <i class="pi pi-search"/>
+                <InputText v-model="filtros['global'].value" placeholder="Nome..."/>
               </span>
             </div>
           </template>
@@ -85,20 +95,30 @@
           <img :src="'images/product/' + produto.image" :alt="produto.image" v-if="produto.image" width="150"
                class="mt-0 mx-auto mb-5 block shadow-2"/>
           <div class="field">
-            <label for="name">Name</label>
-            <InputText id="name" v-model.trim="produto.name" required="true" autofocus
+            <label for="name">Nome</label>
+            <InputText id="name" v-model="locForm.nome" required="true" autofocus
                        :class="{'p-invalid': submetido && !produto.name}"/>
-            <small class="p-invalid" v-if="submetido && !produto.name">Name is required.</small>
-          </div>
-          <div class="field">
-            <label for="description">Description</label>
-            <Textarea id="description" v-model="produto.description" required="true" rows="3" cols="20"/>
+            <small class="p-invalid" v-if="submetido && !produto.name">O campo nome é requerido.</small>
           </div>
 
           <div class="field">
-            <label for="inventoryStatus" class="mb-3">Inventory Status</label>
-            <Dropdown id="inventoryStatus" v-model="produto.inventoryStatus" :options="statuses" optionLabel="label"
-                      placeholder="Select a Status">
+            <label for="name">Avaliação</label>
+            <InputText id="name" v-model="locForm.avaliacao" required="true" autofocus
+                       :class="{'p-invalid': submetido && !produto.name}"/>
+            <small class="p-invalid" v-if="submetido && !produto.name">O campo avaliação é requerido.</small>
+          </div>
+
+          <div class="field">
+            <label for="name">Status</label>
+            <InputText id="name" v-model="locForm.status" required="true" autofocus
+                       :class="{'p-invalid': submetido && !produto.name}"/>
+            <small class="p-invalid" v-if="submetido && !produto.name">O campo status é requerido.</small>
+          </div>
+
+<!--          <div class="field">
+            <label for="inventoryStatus" class="mb-3">Status</label>
+            <Dropdown id="inventoryStatus" v-model="locForm.status" :options="statuses" optionLabel="label"
+                      placeholder="Selecione o status">
               <template #value="slotProps">
                 <div v-if="slotProps.value && slotProps.value.value">
                   <span :class="'product-badge status-' +slotProps.value.value">{{ slotProps.value.label }}</span>
@@ -111,33 +131,11 @@
 								</span>
               </template>
             </Dropdown>
-          </div>
-
-          <div class="field">
-            <label class="mb-3">Category</label>
-            <div class="formgrid grid">
-              <div class="field-radiobutton col-6">
-                <RadioButton id="category1" name="category" value="Accessories" v-model="produto.category"/>
-                <label for="category1">Accessories</label>
-              </div>
-              <div class="field-radiobutton col-6">
-                <RadioButton id="category2" name="category" value="Clothing" v-model="produto.category"/>
-                <label for="category2">Clothing</label>
-              </div>
-              <div class="field-radiobutton col-6">
-                <RadioButton id="category3" name="category" value="Electronics" v-model="produto.category"/>
-                <label for="category3">Electronics</label>
-              </div>
-              <div class="field-radiobutton col-6">
-                <RadioButton id="category4" name="category" value="Fitness" v-model="produto.category"/>
-                <label for="category4">Fitness</label>
-              </div>
-            </div>
-          </div>
+          </div>-->
 
           <template #footer>
-            <Button label="Cancel" icon="pi pi-times" class="p-button-text" @click="hideDialog"/>
-            <Button label="Save" icon="pi pi-check" class="p-button-text" @click="saveProduct"/>
+            <Button label="Cancelar" icon="pi pi-times" class="p-button-text" @click="hideDialog"/>
+            <Button label="Salvar" icon="pi pi-check" class="p-button-text" @click="store"/>
           </template>
         </Dialog>
 
@@ -173,9 +171,11 @@
 
 import ProductService from "@/service/ProductService";
 import {FilterMatchMode} from "primevue/api";
+import axios from "axios";
 
 export default {
   name: "ClientesIndex",
+
 
   data() {
     return {
@@ -188,10 +188,13 @@ export default {
       deleteProductDialog: false,
       deleteProductsDialog: false,
 
+      // loading1: false,
+      locForm: {},
+      registros: undefined,
+
       statuses: [
-        {label: 'ATIVO', value: 'instock'},
-        {label: 'LOWSTOCK', value: 'lowstock'},
-        {label: 'SUSPENSO', value: 'outofstock'}
+        {label: 'ATIVO', value: 'ativo'},
+        {label: 'SUSPENSO', value: 'suspenso'}
       ]
     }
   },
@@ -202,19 +205,14 @@ export default {
   },
   mounted() {
     this.productService.getProducts().then(data => this.produtos = data);
+    this.show();
   },
 
   methods: {
-    formatCurrency(value) {
-      if (value)
-        return value.toLocaleString('en-US', {style: 'currency', currency: 'USD'});
-      return;
-    },
-
-    openNew() {
+    adicionarNovo() {
       this.produto = {};
       this.submetido = false;
-      this.dialogProduto = false;
+      this.dialogProduto = true;
     },
 
     hideDialog() {
@@ -241,6 +239,32 @@ export default {
         this.produto = {};
       }
     },
+
+    store() {
+      axios.post('http://127.0.0.1:8000/api/cadastro/clientes', this.locForm)
+          .then((response) => {
+            console.log(response);
+          })
+          .catch((error) => {
+            console.log(error.response.status);
+          })
+    },
+
+    async show() {
+      this.loading1 = true;
+
+      //TODO, VER COM IRLAN, PQ DO PARAMS.
+      axios.get('http://127.0.0.1:8000/api/cadastro/clientes/show', {
+        params: this.locForm
+      })
+          .then((response) => {
+            this.registros = response.data.registros.data;
+            this.loading1 = false;
+            console.log(response);
+          });
+
+    },
+
     editProduct(produto) {
       this.produto = {...produto};
       this.dialogProduto = true;

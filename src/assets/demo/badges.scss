@@ -49,7 +49,7 @@
     font-size: 12px;
     letter-spacing: .3px;
 
-    &.status-instock {
+    &.status-ativo {
         background: #C8E6C9;
         color: #256029;
     }
@@ -59,7 +59,7 @@
         color: #C63737;
     }
 
-    &.status-lowstock {
+    &.status-suspenso {
         background: #FEEDAF;
         color: #8A5340;
     }
