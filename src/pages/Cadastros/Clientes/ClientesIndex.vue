@@ -27,7 +27,8 @@
 
         </Toolbar>
 
-        <DataTable ref="dt" :value="produtos" v-model:selection="linhaSelecionada" dataKey="id" :paginator="true"
+        <DataTable ref="dt" v-if="registros"
+                   :value="registros" v-model:selection="linhaSelecionada" dataKey="id" :paginator="true"
                    :rows="10" :filters="filtros"
                    paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                    :rowsPerPageOptions="[5,10,25]"
@@ -50,33 +51,33 @@
           </template>
 
           <Column selectionMode="multiple" headerStyle="width: 3rem"></Column>
-          <Column field="code" header="Código" :sortable="true" headerStyle="width:20%;">
+          <Column field="id" header="Código" :sortable="true" headerStyle="width:20%;">
             <template #body="slotProps">
               <span class="p-column-title">Código</span>
-              {{ slotProps.data.code }}
+              {{ slotProps.data.id }}
             </template>
           </Column>
 
-          <Column field="name" header="Nome" :sortable="true" headerStyle="width:40%;">
+          <Column field="nome" header="Nome" :sortable="true" headerStyle="width:40%;">
             <template #body="slotProps">
               <span class="p-column-title">Nome</span>
-              {{ slotProps.data.name }}
+              {{ slotProps.data.nome }}
             </template>
           </Column>
 
           <Column field="rating" header="Avaliações" :sortable="true" headerStyle="width:30%; min-width:10rem;">
             <template #body="slotProps">
               <span class="p-column-title">Avaliação</span>
-              <Rating :modelValue="slotProps.data.rating" :readonly="true" :cancel="false"/>
+              <Rating :modelValue="slotProps.data.avaliacao" :readonly="true" :cancel="false"/>
             </template>
           </Column>
 
-          <Column field="inventoryStatus" header="Status" :sortable="true" headerStyle="width:30%;">
+          <Column field="status" header="Status" :sortable="true" headerStyle="width:30%;">
             <template #body="slotProps">
               <span class="p-column-title">Status</span>
               <span
                   :class="'product-badge status-' + (slotProps.data.inventoryStatus ? slotProps.data.inventoryStatus.toLowerCase() : '')">{{
-                  slotProps.data.inventoryStatus
+                  slotProps.data.status
                 }}</span>
             </template>
           </Column>
@@ -90,13 +91,13 @@
           </Column>
         </DataTable>
 
-        <Dialog v-model:visible="dialogProduto" :style="{width: '450px'}" header="Product Details" :modal="true"
+        <Dialog v-model:visible="dialogProduto" :style="{width: '450px'}" header="Cadastro cliente" :modal="true"
                 class="p-fluid">
           <img :src="'images/product/' + produto.image" :alt="produto.image" v-if="produto.image" width="150"
                class="mt-0 mx-auto mb-5 block shadow-2"/>
           <div class="field">
-            <label for="name">Nome</label>
-            <InputText id="name" v-model="locForm.nome" required="true" autofocus
+            <label for="none">Nome</label>
+            <InputText id="nome" v-model="locForm.nome" required="true" autofocus
                        :class="{'p-invalid': submetido && !produto.name}"/>
             <small class="p-invalid" v-if="submetido && !produto.name">O campo nome é requerido.</small>
           </div>
@@ -115,23 +116,23 @@
             <small class="p-invalid" v-if="submetido && !produto.name">O campo status é requerido.</small>
           </div>
 
-<!--          <div class="field">
-            <label for="inventoryStatus" class="mb-3">Status</label>
-            <Dropdown id="inventoryStatus" v-model="locForm.status" :options="statuses" optionLabel="label"
-                      placeholder="Selecione o status">
-              <template #value="slotProps">
-                <div v-if="slotProps.value && slotProps.value.value">
-                  <span :class="'product-badge status-' +slotProps.value.value">{{ slotProps.value.label }}</span>
-                </div>
-                <div v-else-if="slotProps.value && !slotProps.value.value">
-                  <span :class="'product-badge status-' +slotProps.value.toLowerCase()">{{ slotProps.value }}</span>
-                </div>
-                <span v-else>
-									{{ slotProps.placeholder }}
-								</span>
-              </template>
-            </Dropdown>
-          </div>-->
+          <!--          <div class="field">
+                      <label for="inventoryStatus" class="mb-3">Status</label>
+                      <Dropdown id="inventoryStatus" v-model="locForm.status" :options="statuses" optionLabel="label"
+                                placeholder="Selecione o status">
+                        <template #value="slotProps">
+                          <div v-if="slotProps.value && slotProps.value.value">
+                            <span :class="'product-badge status-' +slotProps.value.value">{{ slotProps.value.label }}</span>
+                          </div>
+                          <div v-else-if="slotProps.value && !slotProps.value.value">
+                            <span :class="'product-badge status-' +slotProps.value.toLowerCase()">{{ slotProps.value }}</span>
+                          </div>
+                          <span v-else>
+                            {{ slotProps.placeholder }}
+                          </span>
+                        </template>
+                      </Dropdown>
+                    </div>-->
 
           <template #footer>
             <Button label="Cancelar" icon="pi pi-times" class="p-button-text" @click="hideDialog"/>
@@ -176,6 +177,13 @@ import axios from "axios";
 export default {
   name: "ClientesIndex",
 
+  props: {
+    registro_id: {
+      type: String,
+      default: null,
+    }
+  },
+
 
   data() {
     return {
@@ -187,6 +195,10 @@ export default {
       dialogProduto: null,
       deleteProductDialog: false,
       deleteProductsDialog: false,
+
+      nome: {},
+      avaliacao: {},
+      status: {},
 
       // loading1: false,
       locForm: {},
@@ -203,9 +215,18 @@ export default {
     this.productService = new ProductService();
     this.initFilters();
   },
-  mounted() {
+  async mounted() {
     this.productService.getProducts().then(data => this.produtos = data);
     this.show();
+    await this.getData();
+
+    if (this.registro_id) {
+      await this.getRegistro(`http://127.0.0.1:8000/api/cadastro/clientes/${this.registro_id}/edit`)
+          .then((response) => {
+            this.locForm = response.registro;
+            console.log(response)
+          });
+    }
   },
 
   methods: {
@@ -242,12 +263,31 @@ export default {
 
     store() {
       axios.post('http://127.0.0.1:8000/api/cadastro/clientes', this.locForm)
-          .then((response) => {
-            console.log(response);
+          .then(() => {
+            // console.log(response);
+
+            this.$toast.add({severity: 'success', summary: "Cliente cadastrado com sucesso!", life: 2000});
           })
           .catch((error) => {
-            console.log(error.response.status);
+            console.log(this.errors = error);
           })
+    },
+
+    getData: async function () {
+      await axios.get('http://127.0.0.1:8000/api/cadastro/clientes/get_data')
+
+          .then((response) => {
+            this.nome = response.nome;
+            this.avaliacao = response.avaliacao;
+            this.status = response.status;
+
+            // console.log(response)
+          });
+    },
+
+    getRegistro: async function () {
+      const dados = await axios.get(`http://127.0.0.1:8000/api/cadastro/clientes/${this.registro_id}/edit`);
+      this.locForm = dados.data.registro;
     },
 
     async show() {
@@ -260,7 +300,7 @@ export default {
           .then((response) => {
             this.registros = response.data.registros.data;
             this.loading1 = false;
-            console.log(response);
+            console.log(response.data.registros.data);
           });
 
     },

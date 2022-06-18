@@ -46,7 +46,7 @@ export default {
             this.$emit('topbar-menu-toggle', event);
         },
 		topbarImage() {
-			return this.$appState.darkTheme ? 'images/logo-white.svg' : 'images/large-logo.png';
+			return this.$appState.darkTheme ? 'images/logo.png' : 'images/large-logo.png';
 		}
     },
 	computed: {
