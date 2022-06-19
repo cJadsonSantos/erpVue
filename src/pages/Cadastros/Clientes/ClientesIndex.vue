@@ -17,19 +17,13 @@
 
           <template v-slot:end>
             <Button label="Visualizar" icon="pi pi-search" class="p-button-secondary mr-2 inline-block" @click="show"/>
-
-            <FileUpload mode="basic" accept="image/*" :maxFileSize="1000000" label="Importar" chooseLabel="Importar"
-                        class="mr-2 inline-block"/>
-
-            <Button label="Exportar" icon="pi pi-upload" class="p-button-help inline-block" @click="exportCSV($event)"/>
-
           </template>
 
         </Toolbar>
 
         <DataTable ref="dt" v-if="registros"
                    :value="registros" v-model:selection="linhaSelecionada" dataKey="id" :paginator="true"
-                   :rows="10" :filters="filtros"
+                   :rows="5" :filters="filtros"
                    paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                    :rowsPerPageOptions="[5,10,25]"
                    currentPageReportTemplate="Monstrando de {first} a {last} de {totalRecords} clientes"
@@ -38,14 +32,10 @@
           <template #header>
             <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
               <h5 class="m-0">Gerenciar Clientes</h5>
-              <span class="block mt-2 md:mt-0 p-input-icon-left">
-                <i class="pi pi-search"/>
-                <InputText v-model="filtros['global'].value" placeholder="Codigo..."/>
-              </span>
 
               <span class="block mt-2 md:mt-0 p-input-icon-left">
                 <i class="pi pi-search"/>
-                <InputText v-model="filtros['global'].value" placeholder="Nome..."/>
+                <InputText v-model="locForm.nome" placeholder="Nome..."/>
               </span>
             </div>
           </template>
@@ -75,30 +65,37 @@
           <Column field="status" header="Status" :sortable="true" headerStyle="width:30%;">
             <template #body="slotProps">
               <span class="p-column-title">Status</span>
-              <span
-                  :class="'product-badge status-' + (slotProps.data.inventoryStatus ? slotProps.data.inventoryStatus.toLowerCase() : '')">{{
-                  slotProps.data.status
-                }}</span>
+              <span>{{slotProps.data.status }}</span>
             </template>
           </Column>
+
           <Column headerStyle="min-width:10rem;">
             <template #body="slotProps">
-              <Button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2"
+              <Button icon="pi pi-pencil" class="p-button-text p-button-info mr-2"
                       @click="editProduct(slotProps.data)"/>
-              <Button icon="pi pi-trash" class="p-button-rounded p-button-warning mt-2"
+              <Button icon="pi pi-trash" class="p-button-text p-button-danger mt-2"
                       @click="confirmDeleteProduct(slotProps.data)"/>
             </template>
           </Column>
+
         </DataTable>
 
-        <Dialog v-model:visible="dialogProduto" :style="{width: '450px'}" header="Cadastro cliente" :modal="true"
-                class="p-fluid">
-          <img :src="'images/product/' + produto.image" :alt="produto.image" v-if="produto.image" width="150"
-               class="mt-0 mx-auto mb-5 block shadow-2"/>
+        <Dialog v-model:visible="dialogProduto"
+                :style="{width: '450px'}"
+                header="Cadastro cliente"
+                :modal="true"
+                class="p-fluid"
+        >
+
           <div class="field">
             <label for="none">Nome</label>
-            <InputText id="nome" v-model="locForm.nome" required="true" autofocus
-                       :class="{'p-invalid': submetido && !produto.name}"/>
+
+            <InputText id="nome"
+                       v-model="locForm.nome"
+                       required="true"
+                       autofocus
+                       :class="{'p-invalid': submetido && !produto.name}"
+            />
             <small class="p-invalid" v-if="submetido && !produto.name">O campo nome é requerido.</small>
           </div>
 
@@ -115,24 +112,6 @@
                        :class="{'p-invalid': submetido && !produto.name}"/>
             <small class="p-invalid" v-if="submetido && !produto.name">O campo status é requerido.</small>
           </div>
-
-          <!--          <div class="field">
-                      <label for="inventoryStatus" class="mb-3">Status</label>
-                      <Dropdown id="inventoryStatus" v-model="locForm.status" :options="statuses" optionLabel="label"
-                                placeholder="Selecione o status">
-                        <template #value="slotProps">
-                          <div v-if="slotProps.value && slotProps.value.value">
-                            <span :class="'product-badge status-' +slotProps.value.value">{{ slotProps.value.label }}</span>
-                          </div>
-                          <div v-else-if="slotProps.value && !slotProps.value.value">
-                            <span :class="'product-badge status-' +slotProps.value.toLowerCase()">{{ slotProps.value }}</span>
-                          </div>
-                          <span v-else>
-                            {{ slotProps.placeholder }}
-                          </span>
-                        </template>
-                      </Dropdown>
-                    </div>-->
 
           <template #footer>
             <Button label="Cancelar" icon="pi pi-times" class="p-button-text" @click="hideDialog"/>
@@ -196,10 +175,6 @@ export default {
       deleteProductDialog: false,
       deleteProductsDialog: false,
 
-      nome: {},
-      avaliacao: {},
-      status: {},
-
       // loading1: false,
       locForm: {},
       registros: undefined,
@@ -241,32 +216,12 @@ export default {
       this.submetido = false;
     },
 
-    saveProduct() {
-      this.submetido = true;
-      if (this.produto.name.trim()) {
-        if (this.produto.id) {
-          this.produto.inventoryStatus = this.produto.inventoryStatus.value ? this.produto.inventoryStatus.value : this.produto.inventoryStatus;
-          this.produtos[this.findIndexById(this.produto.id)] = this.produto;
-          this.$toast.add({severity: 'success', summary: 'Successful', detail: 'Product Updated', life: 3000});
-        } else {
-          this.produto.id = this.createId();
-          this.produto.code = this.createId();
-          this.produto.image = 'product-placeholder.svg';
-          this.produto.inventoryStatus = this.produto.inventoryStatus ? this.produto.inventoryStatus.value : 'INSTOCK';
-          this.produtos.push(this.produto);
-          this.$toast.add({severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000});
-        }
-        this.dialogProduto = false;
-        this.produto = {};
-      }
-    },
-
     store() {
       axios.post('http://127.0.0.1:8000/api/cadastro/clientes', this.locForm)
           .then(() => {
             // console.log(response);
-
             this.$toast.add({severity: 'success', summary: "Cliente cadastrado com sucesso!", life: 2000});
+            this.dialogProduto = false;
           })
           .catch((error) => {
             console.log(this.errors = error);
